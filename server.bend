@@ -32,7 +32,7 @@ def Server.sent(m: Socket & Result<&1, &1, U32 & String, Unit>) -> IO(Unit):
 
 def Server.apply.line(+ch: Chan(S.Store), sock: Socket, +line: String, +store: S.Store) -> IO(Unit):
   do IO<Unit>:
-    +rep : A.Reply = H.Http.dispatch(store, H.Http.parse_line(line))
+    +rep : A.Reply = H.Http.dispatch(store, H.Http.parse_request(line))
     txt : String = Server.reply_text(rep)
     s2 : S.Store = Server.reply_store(rep)
     _b : Bool <- Chan.send(S.Store, ch, s2)

@@ -36,3 +36,9 @@ def Laws.two_creates_keeps_first():
 
 def Laws.two_creates_keeps_second():
   {==}
+
+def Laws.json_name_extracts_api():
+  {==}
+
+def Laws.post_json_body_is_201():
+  {==}
