@@ -65,36 +65,38 @@ def Status.is(+st: A.Status, +want: A.Status) -> Bool:
     case A.S404{} A.S400{}:
       False{}
 
-# POST /items with empty name is 400 and does not grow the store.
 law create_rejects_empty_name:
   {Status.is(Reply.status(A.Api.create(S.Store.empty(), SNil{})), A.S400{}) == True{} : Bool}
 
 law create_empty_name_preserves_count:
   {S.Store.count(Reply.store(A.Api.create(S.Store.empty(), SNil{}))) == 0n : Nat}
 
-# POST /items with a non-empty name is 201 and count becomes 1.
 law create_accepts_name:
   {Status.is(Reply.status(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), A.S201{}) == True{} : Bool}
 
 law create_increments_count:
   {S.Store.count(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}}))) == 1n : Nat}
 
-# GET /items/{id} on an empty store is 404.
 law get_missing_is_404:
   {Status.is(Reply.status(A.Api.get(S.Store.empty(), 0n)), A.S404{}) == True{} : Bool}
 
-# GET after create finds id 0.
 law get_after_create_is_200:
   {Status.is(Reply.status(A.Api.get(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), 0n)), A.S200{}) == True{} : Bool}
 
-# DELETE missing is 404.
 law delete_missing_is_404:
   {Status.is(Reply.status(A.Api.delete(S.Store.empty(), 0n)), A.S404{}) == True{} : Bool}
 
-# Unknown route is 404.
 law unknown_route_is_404:
   {Status.is(Reply.status(A.Api.handle(S.Store.empty(), A.GET{}, A.Unknown{}, SNil{})), A.S404{}) == True{} : Bool}
 
-# OPTIONS never mutates the empty store.
 law options_ok:
   {Status.is(Reply.status(A.Api.handle(S.Store.empty(), A.OPTIONS{}, A.Items{}, SNil{})), A.S200{}) == True{} : Bool}
+
+law two_creates_count:
+  {S.Store.count(Reply.store(A.Api.create(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), SCon{'B', SNil{}}))) == 2n : Nat}
+
+law two_creates_keeps_first:
+  {Status.is(Reply.status(A.Api.get(Reply.store(A.Api.create(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), SCon{'B', SNil{}})), 0n)), A.S200{}) == True{} : Bool}
+
+law two_creates_keeps_second:
+  {Status.is(Reply.status(A.Api.get(Reply.store(A.Api.create(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), SCon{'B', SNil{}})), 1n)), A.S200{}) == True{} : Bool}
