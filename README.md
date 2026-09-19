@@ -18,12 +18,14 @@ Requires Bend 2.0.16+: `curl -fsSL https://bend-lang.com/install.sh | sh`
 
 In the core, the route is `Items{}` / `ItemId{id}` / `Unknown{}`. `id` is `Nat`. Store is an in-memory list.
 
-The HTTP wire format is a **request line only** (no JSON):
+Wire format: request line, and/or a JSON body containing `"name":"..."`.
 
 ```
 GET /items
 GET /items/0
 POST /items/Api
+POST /items
+{"name":"Api"}
 PUT /items/0/NewName
 DELETE /items/0
 OPTIONS /items
@@ -42,6 +44,7 @@ bend main.bend          # in-process demo
 bend main.bend serve    # TCP :8080
 curl http://127.0.0.1:8080/items
 curl -X POST http://127.0.0.1:8080/items/Api
+curl -X POST http://127.0.0.1:8080/items -d '{"name":"Api"}'
 ```
 
 Accept loop follows `demos/io_http_server`: `@unsafe` + `IO.spawn` per socket. The store is a `Chan` of size 1.
