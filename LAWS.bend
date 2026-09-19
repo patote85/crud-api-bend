@@ -1,6 +1,7 @@
 import Base
 import ./store.bend as S
 import ./api.bend as A
+import ./http.bend as H
 
 def Reply.status(+r: A.Reply) -> A.Status:
   match r:
@@ -100,3 +101,9 @@ law two_creates_keeps_first:
 
 law two_creates_keeps_second:
   {Status.is(Reply.status(A.Api.get(Reply.store(A.Api.create(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), SCon{'B', SNil{}})), 1n)), A.S200{}) == True{} : Bool}
+
+law json_name_extracts_api:
+  {H.Http.json_name("{\"name\":\"Api\"}") == "Api" : String}
+
+law post_json_body_is_201:
+  {Status.is(Reply.status(H.Http.dispatch(S.Store.empty(), H.Http.parse_request("POST /items HTTP/1.1\n\n{\"name\":\"Api\"}"))), A.S201{}) == True{} : Bool}
