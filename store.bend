@@ -57,6 +57,13 @@ def Store.insert(+s: Store, +name: String, +desc: String, +price: Nat) -> Store:
     case Store{xs, n}:
       Store{Item{n, name, desc, price} <> xs, 1n+n}
 
+def Store.put(+s: Store, +it: Item) -> Store:
+  match s:
+    case Store{xs, n}:
+      match it:
+        case Item{id, name, desc, price}:
+          Store{Item{id, name, desc, price} <> xs, Nat.max(n, Nat.add(id, 1n))}
+
 @unsafe def Store.find.go(+xs: List<&2, Item>, +id: Nat) -> Maybe<&2, Item>:
   match xs id:
     case Nil{} 0n:
