@@ -3,27 +3,14 @@ import ./store.bend as S
 import ./api.bend as A
 import ./http.bend as H
 
-def Server.body(+st: A.Status, +n: Nat) -> String:
-  match st:
-    case A.S204{}:
-      SNil{}
-    case A.S200{}:
-      "count=" ++ Nat.show(n)
-    case A.S201{}:
-      "count=" ++ Nat.show(n)
-    case A.S400{}:
-      "count=" ++ Nat.show(n)
-    case A.S404{}:
-      "count=" ++ Nat.show(n)
-
 def Server.reply_text(+r: A.Reply) -> String:
   match r:
-    case A.Reply{st, s}:
-      H.Http.response(st, Server.body(st, S.Store.count(s)))
+    case A.Reply{st, s, body}:
+      H.Http.response(st, body)
 
 def Server.reply_store(+r: A.Reply) -> S.Store:
   match r:
-    case A.Reply{st, s}:
+    case A.Reply{st, s, body}:
       s
 
 def Server.sent(m: Socket & Result<&1, &1, U32 & String, Unit>) -> IO(Unit):

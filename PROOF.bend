@@ -42,3 +42,9 @@ def Laws.json_name_extracts_api():
 
 def Laws.post_json_body_is_201():
   {==}
+
+def Laws.json_price_reads_ten():
+  {==}
+
+def Laws.json_desc_reads_x():
+  {==}
