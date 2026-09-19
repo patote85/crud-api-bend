@@ -2,15 +2,16 @@ import Base
 import ./store.bend as S
 import ./api.bend as A
 import ./http.bend as H
+import ./persist.bend as P
 
 def Reply.status(+r: A.Reply) -> A.Status:
   match r:
-    case A.Reply{st, s}:
+    case A.Reply{st, s, b}:
       st
 
 def Reply.store(+r: A.Reply) -> S.Store:
   match r:
-    case A.Reply{st, s}:
+    case A.Reply{st, s, b}:
       s
 
 def Status.is(+st: A.Status, +want: A.Status) -> Bool:
@@ -107,3 +108,15 @@ law json_name_extracts_api:
 
 law post_json_body_is_201:
   {Status.is(Reply.status(H.Http.dispatch(S.Store.empty(), H.Http.parse_request("POST /items HTTP/1.1\n\n{\"name\":\"Api\"}"))), A.S201{}) == True{} : Bool}
+
+law json_price_reads_ten:
+  {H.Http.json_price("{\"price\":10}") == 10n : Nat}
+
+law json_desc_reads_x:
+  {H.Http.json_desc("{\"description\":\"X\"}") == "X" : String}
+
+law json_id_reads_zero:
+  {H.Http.json_id("{\"id\":0}") == 0n : Nat}
+
+law persist_reads_one:
+  {S.Store.count(P.Persist.parse("[{\"id\":0,\"name\":\"A\",\"description\":\"\",\"price\":1}]", S.Store.empty())) == 1n : Nat}
