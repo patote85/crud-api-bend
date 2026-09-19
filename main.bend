@@ -3,6 +3,7 @@ import ./store.bend as S
 import ./api.bend as A
 import ./http.bend as H
 import ./server.bend as V
+import ./persist.bend as P
 
 def show_status(+st: A.Status) -> String:
   match st:
@@ -19,12 +20,12 @@ def show_status(+st: A.Status) -> String:
 
 def show_reply(+r: A.Reply) -> String:
   match r:
-    case A.Reply{st, s}:
-      "status=" ++ show_status(st) ++ " count=" ++ Nat.show(S.Store.count(s))
+    case A.Reply{st, s, body}:
+      "status=" ++ show_status(st) ++ " count=" ++ Nat.show(S.Store.count(s)) ++ " " ++ body
 
 def reply_store(+r: A.Reply) -> S.Store:
   match r:
-    case A.Reply{st, s}:
+    case A.Reply{st, s, body}:
       s
 
 def demo() -> IO(Unit):
@@ -47,7 +48,8 @@ def demo() -> IO(Unit):
 def main.serve() -> IO(Unit):
   do IO<Unit>:
     +ch : Chan(S.Store) <- Chan.new(S.Store, 1)
-    _ok : Bool <- Chan.send(S.Store, ch, S.Store.empty())
+    +st : S.Store <- P.Persist.load()
+    _ok : Bool <- Chan.send(S.Store, ch, st)
     l : Listener <- IO.try(Listener, TCP.listen(8080))
     IO.print("serving http://127.0.0.1:8080")
     IO.print("try: curl http://127.0.0.1:8080/items")
