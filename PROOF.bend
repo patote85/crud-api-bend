@@ -48,3 +48,9 @@ def Laws.json_price_reads_ten():
 
 def Laws.json_desc_reads_x():
   {==}
+
+def Laws.json_id_reads_zero():
+  {==}
+
+def Laws.persist_reads_one():
+  {==}
