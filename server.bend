@@ -2,6 +2,7 @@ import Base
 import ./store.bend as S
 import ./api.bend as A
 import ./http.bend as H
+import ./persist.bend as P
 
 def Server.reply_text(+r: A.Reply) -> String:
   match r:
@@ -21,7 +22,8 @@ def Server.apply.line(+ch: Chan(S.Store), sock: Socket, +line: String, +store: S
   do IO<Unit>:
     +rep : A.Reply = H.Http.dispatch(store, H.Http.parse_request(line))
     txt : String = Server.reply_text(rep)
-    s2 : S.Store = Server.reply_store(rep)
+    +s2 : S.Store = Server.reply_store(rep)
+    _u : Unit <- P.Persist.save(s2)
     _b : Bool <- Chan.send(S.Store, ch, s2)
     sent : Socket & Result<&1, &1, U32 & String, Unit> <- TCP.send(sock, txt)
     Server.sent(sent)
