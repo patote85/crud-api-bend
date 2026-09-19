@@ -27,3 +27,12 @@ def Laws.unknown_route_is_404():
 
 def Laws.options_ok():
   {==}
+
+def Laws.two_creates_count():
+  {==}
+
+def Laws.two_creates_keeps_first():
+  {==}
+
+def Laws.two_creates_keeps_second():
+  {==}
