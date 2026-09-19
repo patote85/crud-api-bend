@@ -2,6 +2,13 @@ import Base
 import ./store.bend as S
 import ./api.bend as A
 
+# Request line, plus optional JSON body after a blank line:
+#   POST /items HTTP/1.1
+#   <headers>
+#
+#   {"name":"Api"}
+# Path segment still works: POST /items/Api
+
 type Parsed is Data:
   Parsed{method: A.Method, route: A.Route, name: String}
   Bad{}
@@ -79,6 +86,33 @@ def Http.read_id(+s: String, +acc: Nat) -> RouteRest:
     case SCon{h, t}:
       RR{A.Unknown{}, SNil{}}
 
+def Http.after_slash(+s: String) -> RouteRest:
+  match s:
+    case SNil{}:
+      RR{A.Items{}, SNil{}}
+    case SCon{'0', t}:
+      Http.read_id(SCon{'0', t}, 0n)
+    case SCon{'1', t}:
+      Http.read_id(SCon{'1', t}, 0n)
+    case SCon{'2', t}:
+      Http.read_id(SCon{'2', t}, 0n)
+    case SCon{'3', t}:
+      Http.read_id(SCon{'3', t}, 0n)
+    case SCon{'4', t}:
+      Http.read_id(SCon{'4', t}, 0n)
+    case SCon{'5', t}:
+      Http.read_id(SCon{'5', t}, 0n)
+    case SCon{'6', t}:
+      Http.read_id(SCon{'6', t}, 0n)
+    case SCon{'7', t}:
+      Http.read_id(SCon{'7', t}, 0n)
+    case SCon{'8', t}:
+      Http.read_id(SCon{'8', t}, 0n)
+    case SCon{'9', t}:
+      Http.read_id(SCon{'9', t}, 0n)
+    case SCon{h, t}:
+      RR{A.Items{}, SCon{h, t}}
+
 def Http.after_items.tail(+s: String) -> RouteRest:
   match s:
     case SNil{}:
@@ -90,14 +124,14 @@ def Http.after_items.tail(+s: String) -> RouteRest:
     case SCon{'\r', t}:
       RR{A.Items{}, SNil{}}
     case SCon{'/', t}:
-      Http.read_id(t, 0n)
+      Http.after_slash(t)
     case SCon{h, t}:
       RR{A.Unknown{}, SNil{}}
 
 def Http.after_items(+s: String) -> RouteRest:
   match s:
     case SCon{'/', SCon{'i', SCon{'t', SCon{'e', SCon{'m', SCon{'s', rest}}}}}}:
-      Http.after_items.tail(Http.skip_spaces(rest))
+      Http.after_items.tail(rest)
     case SNil{}:
       RR{A.Unknown{}, SNil{}}
     case SCon{h, t}:
@@ -147,6 +181,41 @@ def Http.status_text(+st: A.Status) -> String:
 
 def Http.response(+st: A.Status, +body: String) -> String:
   "HTTP/1.1 " ++ Http.status_text(st) ++ "\r\nContent-Type: text/plain\r\nConnection: close\r\n\r\n" ++ body
+
+def Http.take_quoted(+s: String) -> String:
+  match s:
+    case SNil{}:
+      SNil{}
+    case SCon{'"', t}:
+      SNil{}
+    case SCon{h, t}:
+      SCon{h, Http.take_quoted(t)}
+
+def Http.json_name(+s: String) -> String:
+  match s:
+    case SNil{}:
+      SNil{}
+    case SCon{'"', SCon{'n', SCon{'a', SCon{'m', SCon{'e', SCon{'"', SCon{':', SCon{'"', rest}}}}}}}}:
+      Http.take_quoted(rest)
+    case SCon{h, t}:
+      Http.json_name(t)
+
+def Http.pick_name(+path_name: String, +body_name: String) -> String:
+  match path_name:
+    case SNil{}:
+      body_name
+    case SCon{h, t}:
+      SCon{h, t}
+
+def Http.with_body(+p: Parsed, +raw: String) -> Parsed:
+  match p:
+    case Bad{}:
+      Bad{}
+    case Parsed{m, r, name}:
+      Parsed{m, r, Http.pick_name(name, Http.json_name(raw))}
+
+def Http.parse_request(+raw: String) -> Parsed:
+  Http.with_body(Http.parse_line(raw), raw)
 
 def Http.dispatch(+s: S.Store, +p: Parsed) -> A.Reply:
   match p:
