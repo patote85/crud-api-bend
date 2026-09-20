@@ -1,0 +1,17 @@
+name: proof
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  laws:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install Bend
+        run: curl -fsSL https://bend-lang.com/install.sh | sh
+      - name: proof + demo
+        env:
+          BEND_NO_TELEMETRY: "1"
+          BEND: /home/runner/.bend/bin/bend
+        run: sh test.sh
