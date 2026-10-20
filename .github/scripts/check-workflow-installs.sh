@@ -22,8 +22,10 @@ for file in "$@"; do
       if (line ~ /^[[:space:]]*#/) {
         return
       }
-      if (line ~ /(^|[^A-Za-z0-9_])curl([^A-Za-z0-9_][^|]*)?(\|[^|]*)*\|[[:space:]]*(sudo[[:space:]]+)?((\/usr)?\/bin\/)?(bash|sh)([^A-Za-z0-9_]|$)/) {
-        printf "%s:%d: unpinned curl-to-shell install: %s\n", FILENAME, lineno, line
+      pipe = line ~ /(^|[^A-Za-z0-9_])(curl|wget)([^A-Za-z0-9_][^|]*)?(\|[^|]*)*\|[[:space:]]*(sudo[[:space:]]+)?((\/usr)?\/bin\/)?(bash|sh)([^A-Za-z0-9_]|$)/
+      subst = line ~ /(^|[^A-Za-z0-9_])(sudo[[:space:]]+)?((\/usr)?\/bin\/)?(bash|sh)[[:space:]]*<\([[:space:]]*(curl|wget)([^A-Za-z0-9_]|$)/
+      if (pipe || subst) {
+        printf "%s:%d: unpinned download-to-shell install: %s\n", FILENAME, lineno, line
         found = 1
       }
     }
@@ -40,6 +42,10 @@ for file in "$@"; do
         next
       }
       if ($0 ~ /\|[[:space:]]*$/ && !is_yaml_block($0)) {
+        buf = buf $0
+        next
+      }
+      if ($0 ~ /<\([[:space:]]*$/) {
         buf = buf $0
         next
       }
@@ -61,4 +67,4 @@ if [ "$found" -ne 0 ]; then
   exit 1
 fi
 
-printf 'check-workflow-installs: no unpinned curl-to-shell install in %s\n' "$dir"
+printf 'check-workflow-installs: no unpinned download-to-shell install in %s\n' "$dir"
