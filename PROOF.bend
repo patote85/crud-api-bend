@@ -37,6 +37,12 @@ def Laws.two_creates_keeps_first():
 def Laws.two_creates_keeps_second():
   {==}
 
+def Laws.get_second_keeps_id():
+  {==}
+
+def Laws.replace_keeps_id():
+  {==}
+
 def Laws.json_name_extracts_api():
   {==}
 
