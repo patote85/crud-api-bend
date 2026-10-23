@@ -8,8 +8,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: install Bend
-        run: curl -fsSL https://bend-lang.com/install.sh | sh
+      - name: reject unpinned curl-to-shell installs
+        run: sh .github/scripts/check-workflow-installs.sh
+      - name: install Bend 2.0.37
+        env:
+          BEND_VERSION: "2.0.37"
+          BEND_SHA256: "84c32465a39bc9ac315eade23f470cb8db03153dc860f89564fcfec153c3e445"
+        run: sh .github/scripts/install-bend.sh
       - name: proof + demo
         env:
           BEND_NO_TELEMETRY: "1"
