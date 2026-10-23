@@ -14,6 +14,11 @@ def Reply.store(+r: A.Reply) -> S.Store:
     case A.Reply{st, s, b}:
       s
 
+def Reply.body(+r: A.Reply) -> String:
+  match r:
+    case A.Reply{st, s, b}:
+      b
+
 def Status.is(+st: A.Status, +want: A.Status) -> Bool:
   match st want:
     case A.S200{} A.S200{}:
@@ -102,6 +107,12 @@ law two_creates_keeps_first:
 
 law two_creates_keeps_second:
   {Status.is(Reply.status(A.Api.get(Reply.store(A.Api.create(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), SCon{'B', SNil{}})), 1n)), A.S200{}) == True{} : Bool}
+
+law get_second_keeps_id:
+  {Reply.body(A.Api.get(Reply.store(A.Api.create(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), SCon{'B', SNil{}})), 1n)) == "{\"id\":1,\"name\":\"B\",\"description\":\"\",\"price\":0}" : String}
+
+law replace_keeps_id:
+  {Reply.body(A.Api.get(Reply.store(A.Api.update.full(Reply.store(A.Api.create(Reply.store(A.Api.create(S.Store.empty(), SCon{'A', SNil{}})), SCon{'B', SNil{}})), 1n, SCon{'C', SNil{}}, SCon{'d', SNil{}}, 4n)), 1n)) == "{\"id\":1,\"name\":\"C\",\"description\":\"d\",\"price\":4}" : String}
 
 law json_name_extracts_api:
   {H.Http.json_name("{\"name\":\"Api\"}") == "Api" : String}

@@ -6,6 +6,10 @@ type Item is Data:
 type Store is Data:
   Store{items: List<&2, Item>, next: Nat}
 
+type Walk is Data:
+  WalkLook{}
+  WalkHit{eq: Bool, it: Item}
+
 def Store.empty() -> Store:
   Store{Nil{}, 0n}
 
@@ -64,25 +68,23 @@ def Store.put(+s: Store, +it: Item) -> Store:
         case Item{id, name, desc, price}:
           Store{Item{id, name, desc, price} <> xs, Nat.max(n, Nat.add(id, 1n))}
 
-@unsafe def Store.find.go(+xs: List<&2, Item>, +id: Nat) -> Maybe<&2, Item>:
-  match xs id:
-    case Nil{} 0n:
+def Store.find.go(+xs: List<&2, Item>, +id: Nat, +phase: Walk) -> Maybe<&2, Item>:
+  match xs phase:
+    case Nil{} WalkLook{}:
       None{}
-    case Nil{} 1n+p:
+    case Item{+i, name, desc, price} <> t WalkLook{}:
+      Store.find.go(t, id, WalkHit{Nat.is_eq(i, id), Item{i, name, desc, price}})
+    case _ WalkHit{True{}, it}:
+      Some{it}
+    case Nil{} WalkHit{False{}, it}:
       None{}
-    case Item{0n, name, desc, price} <> t 0n:
-      Some{Item{0n, name, desc, price}}
-    case Item{0n, name, desc, price} <> t 1n+p:
-      Store.find.go(t, 1n+p)
-    case Item{1n+q, name, desc, price} <> t 0n:
-      Store.find.go(t, 0n)
-    case Item{1n+q, name, desc, price} <> t 1n+p:
-      Store.find.go(Item{q, name, desc, price} <> t, p)
+    case Item{+i, name, desc, price} <> t WalkHit{False{}, it}:
+      Store.find.go(t, id, WalkHit{Nat.is_eq(i, id), Item{i, name, desc, price}})
 
 def Store.find(+s: Store, +id: Nat) -> Maybe<&2, Item>:
   match s:
     case Store{xs, n}:
-      Store.find.go(xs, id)
+      Store.find.go(xs, id, WalkLook{})
 
 def Store.has.from(+m: Maybe<&2, Item>) -> Bool:
   match m:
@@ -104,42 +106,38 @@ def Store.found_json(+m: Maybe<&2, Item>) -> String:
 def Store.get_json(+s: Store, +id: Nat) -> String:
   Store.found_json(Store.find(s, id))
 
-@unsafe def Store.drop.go(+xs: List<&2, Item>, +id: Nat) -> List<&2, Item>:
-  match xs id:
-    case Nil{} 0n:
+def Store.drop.go(+xs: List<&2, Item>, +id: Nat, +phase: Walk) -> List<&2, Item>:
+  match xs phase:
+    case Nil{} WalkLook{}:
       Nil{}
-    case Nil{} 1n+p:
-      Nil{}
-    case Item{0n, name, desc, price} <> t 0n:
-      t
-    case Item{0n, name, desc, price} <> t 1n+p:
-      Item{0n, name, desc, price} <> Store.drop.go(t, 1n+p)
-    case Item{1n+q, name, desc, price} <> t 0n:
-      Item{1n+q, name, desc, price} <> Store.drop.go(t, 0n)
-    case Item{1n+q, name, desc, price} <> t 1n+p:
-      Store.drop.go(Item{q, name, desc, price} <> t, p)
+    case Item{+i, name, desc, price} <> t WalkLook{}:
+      Store.drop.go(t, id, WalkHit{Nat.is_eq(i, id), Item{i, name, desc, price}})
+    case rest WalkHit{True{}, it}:
+      rest
+    case Nil{} WalkHit{False{}, it}:
+      it <> Nil{}
+    case Item{+i, name, desc, price} <> t WalkHit{False{}, it}:
+      it <> Store.drop.go(t, id, WalkHit{Nat.is_eq(i, id), Item{i, name, desc, price}})
 
 def Store.drop(+s: Store, +id: Nat) -> Store:
   match s:
     case Store{xs, n}:
-      Store{Store.drop.go(xs, id), n}
+      Store{Store.drop.go(xs, id, WalkLook{}), n}
 
-@unsafe def Store.replace.go(+xs: List<&2, Item>, +id: Nat, +name: String, +desc: String, +price: Nat) -> List<&2, Item>:
-  match xs id:
-    case Nil{} 0n:
+def Store.replace.go(+xs: List<&2, Item>, +id: Nat, +name: String, +desc: String, +price: Nat, +phase: Walk) -> List<&2, Item>:
+  match xs phase:
+    case Nil{} WalkLook{}:
       Nil{}
-    case Nil{} 1n+p:
-      Nil{}
-    case Item{0n, old, od, op} <> t 0n:
-      Item{0n, name, desc, price} <> t
-    case Item{0n, old, od, op} <> t 1n+p:
-      Item{0n, old, od, op} <> Store.replace.go(t, 1n+p, name, desc, price)
-    case Item{1n+q, old, od, op} <> t 0n:
-      Item{1n+q, old, od, op} <> Store.replace.go(t, 0n, name, desc, price)
-    case Item{1n+q, old, od, op} <> t 1n+p:
-      Store.replace.go(Item{q, old, od, op} <> t, p, name, desc, price)
+    case Item{+i, on, od, op} <> t WalkLook{}:
+      Store.replace.go(t, id, name, desc, price, WalkHit{Nat.is_eq(i, id), Item{i, on, od, op}})
+    case rest WalkHit{True{}, Item{i, on, od, op}}:
+      Item{i, name, desc, price} <> rest
+    case Nil{} WalkHit{False{}, it}:
+      it <> Nil{}
+    case Item{+i, on, od, op} <> t WalkHit{False{}, it}:
+      it <> Store.replace.go(t, id, name, desc, price, WalkHit{Nat.is_eq(i, id), Item{i, on, od, op}})
 
 def Store.replace(+s: Store, +id: Nat, +name: String, +desc: String, +price: Nat) -> Store:
   match s:
     case Store{xs, n}:
-      Store{Store.replace.go(xs, id, name, desc, price), n}
+      Store{Store.replace.go(xs, id, name, desc, price, WalkLook{}), n}

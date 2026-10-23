@@ -49,8 +49,9 @@ def main.serve() -> IO(Unit):
   do IO<Unit>:
     +ch : Chan(S.Store) <- Chan.new(S.Store, 1)
     +st : S.Store <- P.Persist.load()
-    _ok : Bool <- Chan.send(S.Store, ch, st)
-    l : Listener <- IO.try(Listener, TCP.listen(8080))
+    put : Result<&1, &1, S.Store, Unit> <- Chan.send(S.Store, ch, st)
+    _d : Unit = V.Server.sent_store(put)
+    l : Listener <- IO.try(Listener, TCP.listen("127.0.0.1", 8080))
     IO.print("serving http://127.0.0.1:8080")
     IO.print("try: curl http://127.0.0.1:8080/items")
     IO.print("     curl -X POST http://127.0.0.1:8080/items/Api")

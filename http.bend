@@ -191,6 +191,33 @@ def Http.take_quoted(+s: String) -> String:
     case SCon{h, t}:
       SCon{h, Http.take_quoted(t)}
 
+def Http.json_nat(+s: String, +acc: Nat) -> Nat:
+  match s:
+    case SNil{}:
+      acc
+    case SCon{'0', t}:
+      Http.json_nat(t, Nat.mul(acc, 10n))
+    case SCon{'1', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 1n))
+    case SCon{'2', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 2n))
+    case SCon{'3', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 3n))
+    case SCon{'4', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 4n))
+    case SCon{'5', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 5n))
+    case SCon{'6', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 6n))
+    case SCon{'7', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 7n))
+    case SCon{'8', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 8n))
+    case SCon{'9', t}:
+      Http.json_nat(t, Nat.add(Nat.mul(acc, 10n), 9n))
+    case SCon{h, t}:
+      acc
+
 def Http.json_name(+s: String) -> String:
   match s:
     case SNil{}:
@@ -199,6 +226,33 @@ def Http.json_name(+s: String) -> String:
       Http.take_quoted(rest)
     case SCon{h, t}:
       Http.json_name(t)
+
+def Http.json_id(+s: String) -> Nat:
+  match s:
+    case SNil{}:
+      0n
+    case SCon{'"', SCon{'i', SCon{'d', SCon{'"', SCon{':', rest}}}}}:
+      Http.json_nat(rest, 0n)
+    case SCon{h, t}:
+      Http.json_id(t)
+
+def Http.json_desc(+s: String) -> String:
+  match s:
+    case SNil{}:
+      SNil{}
+    case SCon{'"', SCon{'d', SCon{'e', SCon{'s', SCon{'c', SCon{'r', SCon{'i', SCon{'p', SCon{'t', SCon{'i', SCon{'o', SCon{'n', SCon{'"', SCon{':', SCon{'"', rest}}}}}}}}}}}}}}}:
+      Http.take_quoted(rest)
+    case SCon{h, t}:
+      Http.json_desc(t)
+
+def Http.json_price(+s: String) -> Nat:
+  match s:
+    case SNil{}:
+      0n
+    case SCon{'"', SCon{'p', SCon{'r', SCon{'i', SCon{'c', SCon{'e', SCon{'"', SCon{':', rest}}}}}}}}:
+      Http.json_nat(rest, 0n)
+    case SCon{h, t}:
+      Http.json_price(t)
 
 def Http.pick_name(+path_name: String, +body_name: String) -> String:
   match path_name:
