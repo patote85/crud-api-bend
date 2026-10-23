@@ -220,6 +220,6 @@ def Http.parse_request(+raw: String) -> Parsed:
 def Http.dispatch(+s: S.Store, +p: Parsed) -> A.Reply:
   match p:
     case Bad{}:
-      A.Reply{A.S404{}, s}
+      A.Api.err(A.S404{}, s, "bad request")
     case Parsed{m, r, name}:
       A.Api.handle(s, m, r, name)
